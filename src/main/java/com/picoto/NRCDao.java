@@ -116,6 +116,7 @@ public class NRCDao {
 
 	public List<String> getPagos(String nif, boolean bloquear) {
 		try {
+			Utils.debug("Comienza acceso a tabla para consulta");
 			getConnection();
 			List<String> lista = new ArrayList<String>();
 			String sql = "select nrc, importe, fecha from tpv_nrcs where nif = ? order by fecha "
@@ -128,22 +129,23 @@ public class NRCDao {
 			while (rs.next()) {
 				lista.add("NRC: " + rs.getString(1) + " Importe: " + rs.getBigDecimal(2) + " " + rs.getTimestamp(3));
 				if (bloquear) {
-					Utils.debug("Modificando cursor");
-					rs.updateTimestamp("fecha", new Timestamp(new Date().getTime()));
+					Utils.debug("Registro leido con timestamp: "+rs.getTimestamp(3));
+					Timestamp ts = new Timestamp(new Date().getTime());
+					rs.updateTimestamp("fecha", ts);
 					rs.updateRow();
-					Utils.debug("Cursor modificado");
+					Utils.debug("Cursor modificado: "+ts);
 				}
 			}
 			rs.close();
 			statement.close();
 
 			if (bloquear) {
-				Utils.debug("Bloqueando registro antes de commit");
-				Thread.sleep(4000);
+				Utils.debug("Esperando...");
+				Thread.sleep(8000);
+				Utils.debug("Espera terminada");
 			}
 			
 			closeConnection(statement); // finally
-			Utils.debug("Commit realizado, bloqueo liberado");
 
 			return lista;
 		} catch (Exception e) {
@@ -179,11 +181,11 @@ public class NRCDao {
 
 	private void getConnection() throws SQLException {
 		//String jdbcURL = "jdbc:h2:./test";
-		String jdbcURL = "jdbc:h2:tcp://localhost/~/test";
-		//String jdbcURL = "jdbc:postgresql://localhost/postgres";
+		//String jdbcURL = "jdbc:h2:tcp://localhost/~/test";
+		String jdbcURL = "jdbc:postgresql://localhost/postgres";
 
-		con = DriverManager.getConnection(jdbcURL, "jmgodino","???");
-		//con = DriverManager.getConnection(jdbcURL, "test","???");
+		//con = DriverManager.getConnection(jdbcURL, "jmgodino","???");
+		con = DriverManager.getConnection(jdbcURL, "postgres","???");
 		
 		
 		con.setAutoCommit(false);
@@ -192,6 +194,7 @@ public class NRCDao {
 	private void closeConnection(Statement statement) throws SQLException {
 		statement.close();
 		con.commit();
+		Utils.debug("Commit realizado. ¿Estado bloqueos?");
 		con.close();
 	}
 

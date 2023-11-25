@@ -1,6 +1,7 @@
 package com.picoto;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -11,17 +12,18 @@ public class Test1 {
 	// java -cp  h2-2.1.214.jar org.h2.tools.Server
 	public static void main (String args[]) throws Exception {
 		
-		Runnable c = () -> {
+		Callable<Void> c = () -> {
 			NRCDao t = new NRCDao();
 			List<String> pagos = t.getPagos("12345678Z", true);
 			for (String pago : pagos) {
 				Utils.debug(pago);
 			}
+			return null;
 		};
 		
 		ScheduledExecutorService exec = Executors.newScheduledThreadPool(2);
 		exec.schedule(c, 0, TimeUnit.SECONDS);
-		exec.schedule(c, 1, TimeUnit.SECONDS);
+		exec.schedule(c, 0, TimeUnit.SECONDS);
 		
 		
 		exec.awaitTermination(10, TimeUnit.SECONDS);
