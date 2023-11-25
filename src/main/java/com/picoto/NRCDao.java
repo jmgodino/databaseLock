@@ -120,29 +120,30 @@ public class NRCDao {
 			List<String> lista = new ArrayList<String>();
 			String sql = "select nrc, importe, fecha from tpv_nrcs where nif = ? order by fecha "
 					+ ((bloquear) ? "for update" : "");
-			Utils.debug(sql);
 			PreparedStatement statement = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_UPDATABLE);
 			statement.setString(1, nif);
 			ResultSet rs = statement.executeQuery();
+			Utils.debug(sql);
 			while (rs.next()) {
 				lista.add("NRC: " + rs.getString(1) + " Importe: " + rs.getBigDecimal(2) + " " + rs.getTimestamp(3));
 				if (bloquear) {
 					Utils.debug("Modificando cursor");
 					rs.updateTimestamp("fecha", new Timestamp(new Date().getTime()));
 					rs.updateRow();
+					Utils.debug("Cursor modificado");
 				}
 			}
 			rs.close();
 			statement.close();
 
 			if (bloquear) {
-				Utils.debug("Bloqueando registro");
-				Thread.sleep(3000);
+				Utils.debug("Bloqueando registro antes de commit");
+				Thread.sleep(4000);
 			}
 			
 			closeConnection(statement); // finally
-
+			Utils.debug("Commit realizado, bloqueo liberado");
 
 			return lista;
 		} catch (Exception e) {
@@ -181,7 +182,7 @@ public class NRCDao {
 		String jdbcURL = "jdbc:h2:tcp://localhost/~/test";
 		//String jdbcURL = "jdbc:postgresql://localhost/postgres";
 
-		con = DriverManager.getConnection(jdbcURL, "test","???");
+		con = DriverManager.getConnection(jdbcURL, "jmgodino","???");
 		//con = DriverManager.getConnection(jdbcURL, "test","???");
 		
 		
