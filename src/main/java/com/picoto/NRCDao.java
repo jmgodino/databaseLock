@@ -15,6 +15,15 @@ import java.util.List;
 public class NRCDao {
 
 	Connection con;
+	
+	enum MODO {H2SQL, POSTGRES};
+	
+	MODO modo = MODO.H2SQL;
+	
+	public NRCDao(MODO modo) {
+		super();
+		this.modo = modo;
+	}
 
 	public void destruir() throws SQLException {
 		getConnection();
@@ -114,7 +123,7 @@ public class NRCDao {
 		}
 	}
 
-	public List<String> getPagos(String nif, boolean bloquear) {
+	public List<String> getPagos(String nif, boolean bloquear, long delayInSecs) {
 		try {
 			Utils.debug("Comienza acceso a tabla para consulta");
 			getConnection();
@@ -141,7 +150,7 @@ public class NRCDao {
 
 			if (bloquear) {
 				Utils.debug("Esperando...");
-				Thread.sleep(8000);
+				Thread.sleep(delayInSecs*1000);
 				Utils.debug("Espera terminada");
 			}
 			
@@ -180,21 +189,24 @@ public class NRCDao {
 	}
 
 	private void getConnection() throws SQLException {
-		//String jdbcURL = "jdbc:h2:./test";
-		//String jdbcURL = "jdbc:h2:tcp://localhost/~/test";
-		String jdbcURL = "jdbc:postgresql://localhost/postgres";
-
-		//con = DriverManager.getConnection(jdbcURL, "jmgodino","???");
-		con = DriverManager.getConnection(jdbcURL, "postgres","???");
-		
-		
+		String jdbcURL=null;
+		switch (modo) { 
+			case POSTGRES:
+				jdbcURL = "jdbc:postgresql://localhost/postgres";
+				con = DriverManager.getConnection(jdbcURL, "postgres","???");
+				break;
+			default:
+				jdbcURL = "jdbc:h2:tcp://localhost/~/test";
+				con = DriverManager.getConnection(jdbcURL, "jmgodino","???");
+				break;			
+		}
 		con.setAutoCommit(false);
 	}
 
 	private void closeConnection(Statement statement) throws SQLException {
 		statement.close();
 		con.commit();
-		Utils.debug("Commit realizado. ¿Estado bloqueos?");
+		Utils.debug("Commit realizado. ¿Liberando bloqueo?");
 		con.close();
 	}
 
